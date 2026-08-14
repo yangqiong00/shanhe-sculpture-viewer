@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHANHE CRAFT | Admin Panel</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: #f5f5f5; color: #333; min-height: 100vh; }
+
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 32px; background: #1a1a1a; color: #fff;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .header-left img { height: 32px; border-radius: 3px; }
+  .header-left h1 { font-size: 16px; font-weight: 600; letter-spacing: 2px; }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .header-right a { color: #FF6A00; text-decoration: none; font-size: 13px; }
+  .btn-logout {
+    background: none; border: 1px solid rgba(255,255,255,0.2); color: #aaa;
+    padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-logout:hover { border-color: #ff4444; color: #ff4444; }
+
+  .container { max-width: 960px; margin: 0 auto; padding: 32px; }
+
+  /* Login */
+  .login-box {
+    max-width: 400px; margin: 120px auto; background: #fff;
+    border-radius: 16px; padding: 40px; box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    text-align: center;
+  }
+  .login-box h2 { font-size: 20px; margin-bottom: 8px; }
+  .login-box p { font-size: 13px; color: #888; margin-bottom: 24px; }
+  .login-box input {
+    width: 100%; padding: 12px 16px; border: 1px solid #ddd; border-radius: 8px;
+    font-size: 15px; outline: none; font-family: inherit; margin-bottom: 16px;
+  }
+  .login-box input:focus { border-color: #FF6A00; }
+  .login-box button {
+    width: 100%; padding: 12px; background: #FF6A00; color: #fff; border: none;
+    border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: background 0.2s;
+  }
+  .login-box button:hover { background: #e55d00; }
+  .login-error { color: #ff4444; font-size: 13px; margin-top: 8px; display: none; }
+
+  /* Dashboard */
+  .dash-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
+  }
+  .dash-header h2 { font-size: 22px; font-weight: 600; }
+  .btn-add {
+    background: #FF6A00; color: #fff; border: none; padding: 10px 20px;
+    border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: background 0.2s;
+  }
+  .btn-add:hover { background: #e55d00; }
+
+  /* Sculpture List */
+  .sculpture-list { display: flex; flex-direction: column; gap: 12px; }
+  .sculpture-item {
+    background: #fff; border-radius: 12px; padding: 20px;
+    display: flex; align-items: center; gap: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: box-shadow 0.2s;
+  }
+  .sculpture-item:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+  .sculpture-icon {
+    width: 60px; height: 60px; background: #f0f0f0; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; font-size: 28px;
+    flex-shrink: 0;
+  }
+  .sculpture-info { flex: 1; }
+  .sculpture-info h4 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .sculpture-info p { font-size: 12px; color: #888; }
+  .sculpture-info .dims { color: #FF6A00; font-weight: 500; margin-top: 2px; }
+  .sculpture-actions { display: flex; gap: 8px; }
+  .btn-view {
+    background: none; border: 1px solid #ddd; color: #666;
+    padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer;
+    text-decoration: none; font-family: inherit; transition: all 0.2s;
+  }
+  .btn-view:hover { border-color: #FF6A00; color: #FF6A00; }
+  .btn-delete {
+    background: none; border: 1px solid #ddd; color: #999;
+    padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer;
+    font-family: inherit; transition: all 0.2s;
+  }
+  .btn-delete:hover { border-color: #ff4444; color: #ff4444; }
+
+  .empty { text-align: center; padding: 60px; color: #aaa; }
+  .empty .icon { font-size: 48px; margin-bottom: 12px; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5); z-index: 1000;
+    display: none; align-items: center; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: #fff; border-radius: 16px; padding: 32px;
+    width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto;
+  }
+  .modal h3 { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block; font-size: 13px; font-weight: 500; color: #666;
+    margin-bottom: 6px;
+  }
+  .form-group input, .form-group textarea {
+    width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px;
+    font-size: 14px; outline: none; font-family: inherit;
+  }
+  .form-group input:focus, .form-group textarea:focus { border-color: #FF6A00; }
+  .form-group textarea { resize: vertical; min-height: 60px; }
+  .form-row { display: flex; gap: 12px; }
+  .form-row .form-group { flex: 1; }
+  .form-group .hint { font-size: 11px; color: #aaa; margin-top: 4px; }
+
+  .file-drop {
+    border: 2px dashed #ddd; border-radius: 12px; padding: 30px;
+    text-align: center; cursor: pointer; transition: all 0.2s;
+  }
+  .file-drop:hover, .file-drop.dragover { border-color: #FF6A00; background: #fff8f0; }
+  .file-drop .icon { font-size: 36px; margin-bottom: 8px; }
+  .file-drop p { font-size: 13px; color: #888; }
+  .file-drop .filename { font-size: 14px; color: #FF6A00; font-weight: 500; margin-top: 8px; }
+  .file-drop input { display: none; }
+
+  .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
+  .modal-actions button { flex: 1; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .btn-save { background: #FF6A00; color: #fff; border: none; }
+  .btn-save:hover { background: #e55d00; }
+  .btn-save:disabled { background: #ccc; cursor: not-allowed; }
+  .btn-cancel { background: #fff; color: #666; border: 1px solid #ddd; }
+  .btn-cancel:hover { border-color: #999; }
+
+  .upload-progress {
+    height: 4px; background: #eee; border-radius: 2px; margin-top: 8px; overflow: hidden;
+    display: none;
+  }
+  .upload-progress .bar { height: 100%; background: #FF6A00; width: 0%; transition: width 0.3s; }
+
+  .toast {
+    position: fixed; top: 20px; right: 20px; z-index: 2000;
+    background: #333; color: #fff; padding: 12px 20px; border-radius: 8px;
+    font-size: 13px; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+  .toast.error { background: #ff4444; }
+  .toast.success { background: #22c55e; }
+
+  @media (max-width: 768px) {
+    .container { padding: 16px; }
+    .header { padding: 12px 16px; }
+    .sculpture-item { flex-direction: column; align-items: flex-start; }
+    .sculpture-actions { width: 100%; }
+    .sculpture-actions .btn-view, .sculpture-actions .btn-delete { flex: 1; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== State ==========
+let isAuthenticated = false;
+let sculptures = [];
+let uploadedFile = null;
+
+// ========== Init ==========
+(async function init() {
+  const authRes = await fetch('/api/auth');
+  const authData = await authRes.json();
+  isAuthenticated = authData.authenticated;
+  if (isAuthenticated) {
+    await loadSculptures();
+    renderDashboard();
+  } else {
+    renderLogin();
+  }
+})();
+
+// ========== Login ==========
+function renderLogin() {
+  document.getElementById('app').innerHTML = `
+    <div class="login-box">
+      <img src="/logo.jpg" alt="" style="height:48px;border-radius:4px;margin-bottom:16px;" onerror="this.style.display='none'">
+      <h2>SHANHE CRAFT Admin</h2>
+      <p>Enter password to manage sculptures</p>
+      <input type="password" id="login-pass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+      <button onclick="doLogin()">Login</button>
+      <div class="login-error" id="login-error"></div>
+    </div>`;
+  setTimeout(() => document.getElementById('login-pass')?.focus(), 100);
+}
+
+async function doLogin() {
+  const pass = document.getElementById('login-pass').value;
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pass })
+    });
+    if (res.ok) {
+      isAuthenticated = true;
+      await loadSculptures();
+      renderDashboard();
+    } else {
+      const err = await res.json();
+      document.getElementById('login-error').textContent = err.error;
+      document.getElementById('login-error').style.display = 'block';
+    }
+  } catch {
+    document.getElementById('login-error').textContent = 'Network error';
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+// ========== Dashboard ==========
+async function loadSculptures() {
+  const res = await fetch('/api/sculptures');
+  sculptures = await res.json();
+}
+
+function renderDashboard() {
+  document.getElementById('app').innerHTML = `
+    <div class="header">
+      <div class="header-left">
+        <img src="/logo.jpg" alt="" onerror="this.style.display='none'">
+        <h1>SHANHE CRAFT</h1>
+      </div>
+      <div class="header-right">
+        <a href="/" target="_blank">View Gallery →</a>
+        <button class="btn-logout" onclick="doLogout()">Logout</button>
+      </div>
+    </div>
+    <div class="container">
+      <div class="dash-header">
+        <h2>My Sculptures (${sculptures.length})</h2>
+        <button class="btn-add" onclick="showAddModal()">+ Add Sculpture</button>
+      </div>
+      <div class="sculpture-list" id="sculpture-list"></div>
+    </div>
+    <div class="modal-overlay" id="modal-overlay">
+      <div class="modal" id="modal-content"></div>
+    </div>`;
+
+  renderSculptureList();
+}
+
+function renderSculptureList() {
+  const list = document.getElementById('sculpture-list');
+  if (sculptures.length === 0) {
+    list.innerHTML = `
+      <div class="empty">
+        <div class="icon">📦</div>
+        <p>No sculptures yet. Click "Add Sculpture" to upload your first one.</p>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = sculptures.map(s => `
+    <div class="sculpture-item">
+      <div class="sculpture-icon">🗿</div>
+      <div class="sculpture-info">
+        <h4>${escHtml(s.name)}</h4>
+        <p>${escHtml(s.description || 'No description')}</p>
+        <p class="dims">${s.default_width} × ${s.default_height} × ${s.default_depth} ${s.unit} | ${s.model_file.split('.').pop().toUpperCase()}</p>
+      </div>
+      <div class="sculpture-actions">
+        <a class="btn-view" href="/viewer.html?id=${s.id}" target="_blank">View 3D</a>
+        <button class="btn-delete" onclick="deleteSculpture(${s.id}, '${escHtml(s.name)}')">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ========== Add Sculpture Modal ==========
+function showAddModal() {
+  uploadedFile = null;
+  document.getElementById('modal-overlay').classList.add('show');
+  document.getElementById('modal-content').innerHTML = `
+    <h3>Add New Sculpture</h3>
+    <div class="form-group">
+      <label>Sculpture Name *</label>
+      <input type="text" id="f-name" placeholder="e.g. Abstract Wave Sculpture">
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="f-desc" placeholder="Brief description of the sculpture (optional)"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Default Dimensions (cm) *</label>
+      <div class="form-row">
+        <div class="form-group">
+          <input type="number" id="f-width" placeholder="Width" value="84">
+          <div class="hint">Width</div>
+        </div>
+        <div class="form-group">
+          <input type="number" id="f-height" placeholder="Height" value="225">
+          <div class="hint">Height</div>
+        </div>
+        <div class="form-group">
+          <input type="number" id="f-depth" placeholder="Depth" value="80">
+          <div class="hint">Depth</div>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>3D Model File *</label>
+      <div class="file-drop" id="file-drop" onclick="document.getElementById('file-input').click()">
+        <div class="icon">📁</div>
+        <p>Click to select or drag & drop</p>
+        <p style="font-size:11px;color:#bbb;margin-top:4px;">Supported: .obj, .fbx, .glb, .gltf, .stl (max 100MB)</p>
+        <div class="filename" id="file-name"></div>
+        <input type="file" id="file-input" accept=".obj,.fbx,.glb,.gltf,.stl" onchange="onFileSelect(this)">
+      </div>
+      <div class="upload-progress" id="upload-progress"><div class="bar" id="upload-bar"></div></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" id="btn-save" onclick="saveSculpture()" disabled>Add Sculpture</button>
+    </div>`;
+
+  // Drag & drop
+  const dropZone = document.getElementById('file-drop');
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) {
+      document.getElementById('file-input').files = e.dataTransfer.files;
+      onFileSelect(document.getElementById('file-input'));
+    }
+  });
+}
+
+function onFileSelect(input) {
+  if (input.files.length > 0) {
+    const file = input.files[0];
+    const ext = file.name.split('.').pop().toLowerCase();
+    const allowed = ['obj', 'fbx', 'glb', 'gltf', 'stl'];
+    if (!allowed.includes(ext)) {
+      showToast(`Unsupported format: .${ext}. Use: ${allowed.map(e => '.'+e).join(', ')}`, 'error');
+      return;
+    }
+    uploadedFile = file;
+    document.getElementById('file-name').textContent = `✓ ${file.name} (${(file.size/1024/1024).toFixed(1)}MB)`;
+    document.getElementById('btn-save').disabled = false;
+  }
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('show');
+}
+
+async function saveSculpture() {
+  const name = document.getElementById('f-name').value.trim();
+  const desc = document.getElementById('f-desc').value.trim();
+  const width = parseFloat(document.getElementById('f-width').value) || 84;
+  const height = parseFloat(document.getElementById('f-height').value) || 225;
+  const depth = parseFloat(document.getElementById('f-depth').value) || 80;
+
+  if (!name) return showToast('Please enter a name', 'error');
+  if (!uploadedFile) return showToast('Please select a 3D model file', 'error');
+
+  const btn = document.getElementById('btn-save');
+  btn.disabled = true;
+  btn.textContent = 'Uploading...';
+
+  // Show progress
+  const progressDiv = document.getElementById('upload-progress');
+  const progressBar = document.getElementById('upload-bar');
+  progressDiv.style.display = 'block';
+
+  try {
+    // Upload file
+    const formData = new FormData();
+    formData.append('model', uploadedFile);
+
+    const uploadRes = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/upload');
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          progressBar.style.width = `${(e.loaded / e.total * 100).toFixed(0)}%`;
+        }
+      };
+      xhr.onload = () => {
+        if (xhr.status === 200) resolve(JSON.parse(xhr.responseText));
+        else reject(new Error(JSON.parse(xhr.responseText).error));
+      };
+      xhr.onerror = () => reject(new Error('Upload failed'));
+      xhr.send(formData);
+    });
+
+    // Create sculpture entry
+    const createRes = await fetch('/api/sculptures', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name, description: desc,
+        model_file: uploadRes.filename,
+        default_width: width, default_height: height, default_depth: depth
+      })
+    });
+
+    if (!createRes.ok) throw new Error((await createRes.json()).error);
+
+    showToast('Sculpture added successfully!', 'success');
+    closeModal();
+    await loadSculptures();
+    renderSculptureList();
+  } catch (err) {
+    showToast(err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = 'Add Sculpture';
+    progressDiv.style.display = 'none';
+  }
+}
+
+// ========== Delete ==========
+async function deleteSculpture(id, name) {
+  if (!confirm(`Delete "${name}"? This will also delete the 3D model file.`)) return;
+  try {
+    await fetch(`/api/sculptures/${id}`, { method: 'DELETE' });
+    showToast('Deleted', 'success');
+    await loadSculptures();
+    renderSculptureList();
+  } catch {
+    showToast('Delete failed', 'error');
+  }
+}
+
+// ========== Logout ==========
+async function doLogout() {
+  await fetch('/api/logout', { method: 'POST' });
+  isAuthenticated = false;
+  renderLogin();
+}
+
+// ========== Utils ==========
+function showToast(msg, type = '') {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = 'toast show ' + type;
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function escHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
+</body>
+</html>

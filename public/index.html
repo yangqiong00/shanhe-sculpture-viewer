@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHANHE CRAFT | Custom Sculpture Studio</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #0f0f0f; color: #e8e8e8; min-height: 100vh; }
+
+  /* Header */
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 40px; background: rgba(15,15,15,0.95);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(20px);
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo-img { height: 44px; border-radius: 4px; }
+  .brand-text h1 { font-size: 18px; font-weight: 600; letter-spacing: 3px; color: #fff; }
+  .brand-text p { font-size: 11px; color: #888; letter-spacing: 1px; margin-top: 2px; }
+  .header-contact {
+    display: flex; gap: 20px; font-size: 13px; color: #aaa;
+  }
+  .header-contact a { color: #FF6A00; text-decoration: none; font-weight: 500; }
+  .header-contact a:hover { text-decoration: underline; }
+
+  /* Hero */
+  .hero {
+    text-align: center; padding: 80px 40px 60px;
+    background: linear-gradient(180deg, #0f0f0f 0%, #1a1a1a 100%);
+  }
+  .hero h2 {
+    font-size: 42px; font-weight: 300; color: #fff;
+    letter-spacing: 4px; margin-bottom: 16px;
+  }
+  .hero h2 span { color: #FF6A00; font-weight: 600; }
+  .hero p { font-size: 16px; color: #888; max-width: 600px; margin: 0 auto; line-height: 1.6; }
+  .hero .stats {
+    display: flex; justify-content: center; gap: 60px; margin-top: 40px;
+  }
+  .hero .stat-item h3 { font-size: 32px; font-weight: 700; color: #FF6A00; }
+  .hero .stat-item p { font-size: 12px; color: #666; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+
+  /* Gallery Grid */
+  .gallery {
+    max-width: 1200px; margin: 0 auto; padding: 40px;
+  }
+  .gallery-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 30px;
+  }
+  .gallery-header h3 { font-size: 20px; font-weight: 500; letter-spacing: 1px; }
+  .gallery-count { font-size: 13px; color: #666; }
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+  }
+  .card {
+    background: #1a1a1a; border-radius: 12px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.06);
+    transition: all 0.3s ease; cursor: pointer;
+    text-decoration: none; color: inherit; display: block;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255,106,0,0.3);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  }
+  .card-thumb {
+    height: 240px; background: #111;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .card-thumb .placeholder-3d {
+    font-size: 80px; opacity: 0.15;
+  }
+  .card-thumb .view-badge {
+    position: absolute; top: 12px; right: 12px;
+    background: rgba(255,106,0,0.9); color: #fff;
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; letter-spacing: 1px;
+  }
+  .card-body { padding: 20px; }
+  .card-body h4 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .card-body p { font-size: 13px; color: #888; line-height: 1.5; }
+  .card-meta {
+    display: flex; gap: 16px; margin-top: 12px; padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.06); font-size: 12px; color: #666;
+  }
+  .card-meta span { display: flex; align-items: center; gap: 4px; }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center; padding: 80px 20px; color: #555;
+  }
+  .empty-state .icon { font-size: 64px; margin-bottom: 16px; opacity: 0.3; }
+  .empty-state p { font-size: 15px; }
+
+  /* Footer */
+  .footer {
+    text-align: center; padding: 40px; border-top: 1px solid rgba(255,255,255,0.06);
+    margin-top: 60px; color: #555; font-size: 13px;
+  }
+  .footer a { color: #FF6A00; text-decoration: none; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .header { padding: 16px 20px; flex-direction: column; gap: 12px; }
+    .header-contact { font-size: 12px; gap: 12px; }
+    .hero { padding: 50px 20px 40px; }
+    .hero h2 { font-size: 26px; letter-spacing: 2px; }
+    .hero .stats { gap: 30px; }
+    .hero .stat-item h3 { font-size: 24px; }
+    .gallery { padding: 20px; }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <img src="/logo.jpg" alt="SHANHE CRAFT" class="logo-img" onerror="this.style.display='none'">
+    <div class="brand-text">
+      <h1>SHANHE CRAFT</h1>
+      <p>CUSTOM SCULPTURE STUDIO</p>
+    </div>
+  </div>
+  <div class="header-contact">
+    <a href="https://wa.me/8615575162291" target="_blank">📱 WhatsApp</a>
+    <a href="mailto:zc852248@gmail.com">✉️ Email</a>
+  </div>
+</header>
+
+<section class="hero">
+  <h2>Custom <span>Sculptures</span> for the World</h2>
+  <p>Huizhou Shanhe Technology specializes in large-scale fiberglass sculptures — from concept to delivery. Browse our collection and visualize each piece in true 3D with adjustable dimensions.</p>
+  <div class="stats">
+    <div class="stat-item">
+      <h3 id="sculpture-count">0</h3>
+      <p>Sculptures</p>
+    </div>
+    <div class="stat-item">
+      <h3>100%</h3>
+      <p>Custom Made</p>
+    </div>
+    <div class="stat-item">
+      <h3>Global</h3>
+      <p>Shipping</p>
+    </div>
+  </div>
+</section>
+
+<section class="gallery">
+  <div class="gallery-header">
+    <h3>Our Sculptures</h3>
+    <span class="gallery-count" id="gallery-count"></span>
+  </div>
+  <div class="grid" id="grid"></div>
+</section>
+
+<footer class="footer">
+  <p>© 2026 Huizhou Shanhe Technology Co., Ltd. | <a href="mailto:zc852248@gmail.com">zc852248@gmail.com</a> | WhatsApp: +86 155 7516 2291</p>
+</footer>
+
+<script>
+async function loadSculptures() {
+  try {
+    const res = await fetch('/api/sculptures');
+    const sculptures = await res.json();
+    const grid = document.getElementById('grid');
+    document.getElementById('sculpture-count').textContent = sculptures.length;
+    document.getElementById('gallery-count').textContent = `${sculptures.length} piece${sculptures.length !== 1 ? 's' : ''}`;
+
+    if (sculptures.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-state" style="grid-column: 1/-1;">
+          <div class="icon">🏛</div>
+          <p>No sculptures uploaded yet.</p>
+        </div>`;
+      return;
+    }
+
+    sculptures.forEach(s => {
+      const dims = `${s.default_width}×${s.default_height}×${s.default_depth} ${s.unit}`;
+      const card = document.createElement('a');
+      card.className = 'card';
+      card.href = `/viewer.html?id=${s.id}`;
+      card.innerHTML = `
+        <div class="card-thumb">
+          <div class="placeholder-3d">🗿</div>
+          <div class="view-badge">VIEW 3D</div>
+        </div>
+        <div class="card-body">
+          <h4>${escapeHtml(s.name)}</h4>
+          <p>${escapeHtml(s.description || 'Custom fiberglass sculpture')}</p>
+          <div class="card-meta">
+            <span>📐 ${dims}</span>
+            <span>🔄 360° View</span>
+          </div>
+        </div>`;
+      grid.appendChild(card);
+    });
+  } catch (err) {
+    console.error('Failed to load sculptures:', err);
+  }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+loadSculptures();
+</script>
+</body>
+</html>
