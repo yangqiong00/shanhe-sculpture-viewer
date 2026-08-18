@@ -92,7 +92,7 @@
     backdrop-filter: blur(20px); border-radius: 10px;
     border: 1px solid rgba(255,255,255,0.08); padding: 8px 16px;
   }
-  .rotate-toolbar.show { display: flex; }
+  .rotate-toolbar.show { display: flex; flex-wrap: wrap; justify-content: center; }
   .rotate-btn {
     background: none; border: 1px solid rgba(255,255,255,0.12); color: #aaa;
     padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer;
@@ -102,6 +102,13 @@
   .rotate-btn.active { border-color: #FF6A00; color: #FF6A00; background: rgba(255,106,0,0.12); }
   .rotate-btn.save { border-color: rgba(34,197,94,0.3); color: #22c55e; }
   .rotate-btn.save:hover { border-color: #22c55e; background: rgba(34,197,94,0.1); }
+  .orient-row { display: flex; gap: 4px; width: 100%; margin-top: 4px; }
+  .orient-btn {
+    flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+    color: #ccc; padding: 5px 0; border-radius: 5px; font-size: 11px; cursor: pointer;
+    transition: all 0.2s; font-family: 'Inter', sans-serif; text-align: center;
+  }
+  .orient-btn:hover { border-color: #FF6A00; color: #FF6A00; background: rgba(255,106,0,0.08); }
   .rotate-hint {
     position: fixed; top: 108px; left: 50%; transform: translateX(-50%); z-index: 90;
     background: rgba(255,106,0,0.15); border: 1px solid rgba(255,106,0,0.3);
@@ -145,9 +152,17 @@
   <a href="/" class="btn-back">← Gallery</a>
 </div>
 <div class="rotate-toolbar" id="rotate-toolbar">
-  <button class="rotate-btn" id="btn-rotate-mode" onclick="window.toggleRotateMode()">🔄 Rotate Model</button>
+  <button class="rotate-btn" id="btn-rotate-mode" onclick="window.toggleRotateMode()">🔄 Free Rotate</button>
   <button class="rotate-btn" id="btn-reset-rot" onclick="window.resetModelRotation()">↺ Reset</button>
-  <button class="rotate-btn save" id="btn-save-rot" onclick="window.saveRotation()">💾 Save Rotation</button>
+  <button class="rotate-btn save" id="btn-save-rot" onclick="window.saveRotation()">💾 Save</button>
+  <div class="orient-row">
+    <button class="orient-btn" onclick="window.applyOrientation('top')">⬆ Top</button>
+    <button class="orient-btn" onclick="window.applyOrientation('bottom')">⬇ Bottom</button>
+    <button class="orient-btn" onclick="window.applyOrientation('left')">⬅ Left</button>
+    <button class="orient-btn" onclick="window.applyOrientation('right')">➡ Right</button>
+    <button class="orient-btn" onclick="window.applyOrientation('front')">◉ Front</button>
+    <button class="orient-btn" onclick="window.applyOrientation('back')">◎ Back</button>
+  </div>
 </div>
 <div class="rotate-hint" id="rotate-hint">Drag to rotate model · <b>S</b> Save · <b>Esc</b> Exit · <b>R</b> Reset</div>
 <button class="rotate-save-float" id="rotate-save-float" onclick="window.saveRotation()">💾 Save Rotation (S)</button>
@@ -393,9 +408,14 @@ function initBoundingBox() {
 
   const boxGeo = new THREE.BoxGeometry(size.x, size.y, size.z);
   const edges = new THREE.EdgesGeometry(boxGeo);
-  const lineMat = new THREE.LineBasicMaterial({ color: 0xff3333, transparent: true, opacity: 0.4 });
+  const lineMat = new THREE.LineBasicMaterial({ color: 0xff2222, transparent: true, opacity: 0.8 });
   const wireframe = new THREE.LineSegments(edges, lineMat);
-  wireframe.position.set(size.x / 2, size.y / 2, size.z / 2);
+  // Center wireframe around model in local space
+  wireframe.position.set(
+    (box.min.x + box.max.x) / 2,
+    size.y / 2,
+    (box.min.z + box.max.z) / 2
+  );
   boundingBox.add(wireframe);
 
   // Helper: convert world pos to modelGroup local
@@ -448,7 +468,11 @@ function updateBoundingBox() {
   // Update wireframe size
   wireframe.geometry.dispose();
   wireframe.geometry = new THREE.EdgesGeometry(new THREE.BoxGeometry(size.x, size.y, size.z));
-  wireframe.position.set(size.x / 2, size.y / 2, size.z / 2);
+  wireframe.position.set(
+    (box.min.x + box.max.x) / 2,
+    size.y / 2,
+    (box.min.z + box.max.z) / 2
+  );
 
   // Update labels
   const fmtCm = (v) => v >= 100 ? `${(v / 100).toFixed(2)}m` : `${Math.round(v)}cm`;
@@ -796,6 +820,34 @@ window.resetModelRotation = function() {
   modelGroup.position.y -= box.min.y;
 
   // Update bounding box for new rotation
+  updateBoundingBox();
+};
+
+// ========== Face Orientation Presets ==========
+window.applyOrientation = function(face) {
+  if (!modelGroup || modelGroup.children.length === 0) return;
+  const obj = modelGroup.children[0];
+
+  const deg2rad = (d) => d * Math.PI / 180;
+
+  // Set rotation so the chosen face points upward
+  switch (face) {
+    case 'top':    obj.rotation.set(deg2rad(0),   deg2rad(0), deg2rad(0));   break;
+    case 'bottom': obj.rotation.set(deg2rad(180), deg2rad(0), deg2rad(0));   break;
+    case 'left':   obj.rotation.set(deg2rad(0),   deg2rad(0), deg2rad(90));  break;
+    case 'right':  obj.rotation.set(deg2rad(0),   deg2rad(0), deg2rad(270)); break;
+    case 'front':  obj.rotation.set(deg2rad(90),  deg2rad(0), deg2rad(0));   break;
+    case 'back':   obj.rotation.set(deg2rad(270), deg2rad(0), deg2rad(0));   break;
+  }
+
+  // Recalculate bounding box
+  const box = new THREE.Box3().setFromObject(modelGroup);
+  originalBox.size = box.getSize(new THREE.Vector3());
+
+  // Reposition on ground
+  modelGroup.position.y -= box.min.y;
+
+  // Update bounding box visual
   updateBoundingBox();
 };
 </script>
