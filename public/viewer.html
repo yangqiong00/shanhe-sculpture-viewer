@@ -188,7 +188,7 @@ let modelGroup = null;
 let humanGroup = null;
 let gridHelper = null;
 let originalBox = null;
-let dimLines = { width: null, height: null, depth: null };
+let boundingBox = null;
 let defaultDims = { w: 84, h: 225, d: 80 };
 let currentScale = 1.0;
 let lockProportional = true;
@@ -356,145 +356,115 @@ function createHumanFigure(height) {
   return g;
 }
 
-// ========== Dimension Annotation Lines ==========
-function createDimLine(color = 0xff2222) {
-  const group = new THREE.Group();
-  const lineMat = new THREE.LineBasicMaterial({ color, linewidth: 2 });
-
-  // Main line
-  const lineGeo = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)
-  ]);
-  const line = new THREE.Line(lineGeo, lineMat);
-  group.add(line);
-
-  // Endpoint ticks
-  const tickSize = 0.05;
-  const tick1Geo = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(0, -tickSize, 0), new THREE.Vector3(0, tickSize, 0)
-  ]);
-  const tick2Geo = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(1, -tickSize, 0), new THREE.Vector3(1, tickSize, 0)
-  ]);
-  group.add(new THREE.Line(tick1Geo, lineMat));
-  group.add(new THREE.Line(tick2Geo, lineMat));
-
-  // Arrowheads
-  const arrowMat = new THREE.MeshBasicMaterial({ color });
-  const arrow1 = new THREE.Mesh(new THREE.ConeGeometry(tickSize*0.8, tickSize*3, 8), arrowMat);
-  arrow1.rotation.z = Math.PI / 2; arrow1.position.set(tickSize*1.5, 0, 0);
-  group.add(arrow1);
-  const arrow2 = new THREE.Mesh(new THREE.ConeGeometry(tickSize*0.8, tickSize*3, 8), arrowMat);
-  arrow2.rotation.z = -Math.PI / 2; arrow2.position.set(1 - tickSize*1.5, 0, 0);
-  group.add(arrow2);
-
-  // Text label sprite
-  const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 128;
+// ========== Bounding Box Wireframe + Dimension Labels ==========
+function createDimLabel(text) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512; canvas.height = 128;
   const ctx = canvas.getContext('2d');
   const texture = new THREE.CanvasTexture(canvas);
   const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
   const sprite = new THREE.Sprite(spriteMat);
-  sprite.scale.set(1, 0.25, 1);
-  sprite.position.y = 0.12;
-  group.add(sprite);
-
-  group.userData = { line, lineGeo, tick1Geo, tick2Geo, arrow1, arrow2, sprite, canvas, ctx, texture };
-  return group;
+  return { sprite, canvas, ctx, texture };
 }
 
-function updateDimLine(dimGroup, length, label, axis) {
-  const d = dimGroup.userData;
-  const len = Math.max(length, 0.01);
-
-  // Update line geometry
-  d.lineGeo.setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(len, 0, 0)]);
-  d.tick1Geo.setFromPoints([new THREE.Vector3(0, -0.05*len, 0), new THREE.Vector3(0, 0.05*len, 0)]);
-  d.tick2Geo.setFromPoints([new THREE.Vector3(len, -0.05*len, 0), new THREE.Vector3(len, 0.05*len, 0)]);
-
-  const tk = 0.03 * len;
-  d.arrow1.scale.set(tk, tk, tk);
-  d.arrow1.position.set(tk * 1.5, 0, 0);
-  d.arrow2.scale.set(tk, tk, tk);
-  d.arrow2.position.set(len - tk * 1.5, 0, 0);
-
-  // Update label
-  const { ctx: c, canvas: cv, texture: tex } = d;
-  c.clearRect(0, 0, 512, 128);
-  c.fillStyle = '#ff2222';
-  c.font = 'bold 48px Inter, sans-serif';
-  c.textAlign = 'center';
-  c.fillText(label, 256, 72);
-  tex.needsUpdate = true;
-
-  d.sprite.position.set(len / 2, len * 0.08, 0);
-  const labelScale = Math.max(len * 0.4, 0.3);
-  d.sprite.scale.set(labelScale, labelScale * 0.25, 1);
+function updateDimLabel(label, text, scale) {
+  const { ctx, canvas, texture, sprite } = label;
+  ctx.clearRect(0, 0, 512, 128);
+  ctx.fillStyle = '#ff2222';
+  ctx.font = 'bold 52px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 256, 64);
+  texture.needsUpdate = true;
+  sprite.scale.set(scale, scale * 0.25, 1);
 }
 
-function initDimLines() {
-  // Remove old dim lines from their current parent
-  Object.values(dimLines).forEach(g => {
-    if (g && g.parent) g.parent.remove(g);
-  });
-
-  dimLines.width = createDimLine(0xff2222);
-  dimLines.height = createDimLine(0xff2222);
-  dimLines.depth = createDimLine(0xff2222);
-
-  // Height line is vertical - rotate it
-  dimLines.height.rotation.z = Math.PI / 2;
-
-  // Add to modelGroup so they rotate together with the model
-  if (modelGroup) {
-    modelGroup.add(dimLines.width);
-    modelGroup.add(dimLines.height);
-    modelGroup.add(dimLines.depth);
-  }
-}
-
-function repositionDimLines() {
+function initBoundingBox() {
+  if (boundingBox && boundingBox.parent) boundingBox.parent.remove(boundingBox);
   if (!modelGroup) return;
 
+  boundingBox = new THREE.Group();
+
+  // Wireframe box matching model size
   const box = new THREE.Box3().setFromObject(modelGroup);
-  const size = new THREE.Vector3();
-  box.getSize(size);
+  const size = new THREE.Vector3(); box.getSize(size);
   const gp = modelGroup.position;
   const gs = modelGroup.scale;
-  const offset = size.y * 0.08;
 
-  // Convert world positions to modelGroup local space
+  const boxGeo = new THREE.BoxGeometry(size.x, size.y, size.z);
+  const edges = new THREE.EdgesGeometry(boxGeo);
+  const lineMat = new THREE.LineBasicMaterial({ color: 0xff3333, transparent: true, opacity: 0.4 });
+  const wireframe = new THREE.LineSegments(edges, lineMat);
+  wireframe.position.set(size.x / 2, size.y / 2, size.z / 2);
+  boundingBox.add(wireframe);
+
+  // Helper: convert world pos to modelGroup local
   const lx = (v) => (v - gp.x) / gs.x;
   const ly = (v) => (v - gp.y) / gs.y;
   const lz = (v) => (v - gp.z) / gs.z;
 
-  // Width (X axis) - along the front bottom edge
-  dimLines.width.position.set(lx(box.min.x), ly(0), lz(box.min.z - offset));
-
-  // Height (Y axis) - along the left front vertical edge (rotated 90° around Z)
-  dimLines.height.position.set(lx(box.min.x - offset), ly(box.min.x - offset), lz(box.min.z - offset));
-
-  // Depth (Z axis) - along the left bottom edge (rotated 90° around Y)
-  dimLines.depth.rotation.y = Math.PI / 2;
-  dimLines.depth.position.set(lx(box.min.z - offset), ly(0), lz(box.min.x - offset));
-}
-
-function updateAllDimLines() {
+  const fmtCm = (v) => v >= 100 ? `${(v / 100).toFixed(2)}m` : `${Math.round(v)}cm`;
   const w = parseFloat(document.getElementById('dim-w').value) || 0;
   const h = parseFloat(document.getElementById('dim-h').value) || 0;
   const d = parseFloat(document.getElementById('dim-d').value) || 0;
+  const labelScale = Math.max(size.x, size.y, size.z) * 0.5;
 
-  // Convert cm to meters for display
-  const wM = w / 100;
-  const hM = h / 100;
-  const dM = d / 100;
+  // Width label (X) - front bottom center
+  const wLabel = createDimLabel(fmtCm(w));
+  wLabel.sprite.position.set(lx(box.min.x + size.x / 2), ly(-0.05), lz(box.min.z - size.z * 0.08));
+  updateDimLabel(wLabel, fmtCm(w), labelScale);
+  boundingBox.add(wLabel.sprite);
 
-  // Format labels
-  const fmtCm = (v) => v >= 100 ? `${(v/100).toFixed(2)}m` : `${Math.round(v)}cm`;
-  updateDimLine(dimLines.width, wM, fmtCm(w), 'x');
-  updateDimLine(dimLines.height, hM, fmtCm(h), 'y');
-  updateDimLine(dimLines.depth, dM, fmtCm(d), 'z');
+  // Height label (Y) - left front center
+  const hLabel = createDimLabel(fmtCm(h));
+  hLabel.sprite.position.set(lx(box.min.x - size.x * 0.08), ly(size.y / 2), lz(box.min.z - size.z * 0.08));
+  updateDimLabel(hLabel, fmtCm(h), labelScale);
+  boundingBox.add(hLabel.sprite);
 
-  repositionDimLines();
+  // Depth label (Z) - left bottom center
+  const dLabel = createDimLabel(fmtCm(d));
+  dLabel.sprite.position.set(lx(box.min.x - size.x * 0.08), ly(-0.05), lz(box.min.z + size.z / 2));
+  updateDimLabel(dLabel, fmtCm(d), labelScale);
+  boundingBox.add(dLabel.sprite);
+
+  // Store refs
+  boundingBox.userData = { wireframe, wLabel, hLabel, dLabel };
+
+  modelGroup.add(boundingBox);
+}
+
+function updateBoundingBox() {
+  if (!boundingBox || !modelGroup) return;
+  const { wireframe, wLabel, hLabel, dLabel } = boundingBox.userData;
+
+  const box = new THREE.Box3().setFromObject(modelGroup);
+  const size = new THREE.Vector3(); box.getSize(size);
+  const gp = modelGroup.position;
+  const gs = modelGroup.scale;
+  const lx = (v) => (v - gp.x) / gs.x;
+  const ly = (v) => (v - gp.y) / gs.y;
+  const lz = (v) => (v - gp.z) / gs.z;
+
+  // Update wireframe size
+  wireframe.geometry.dispose();
+  wireframe.geometry = new THREE.EdgesGeometry(new THREE.BoxGeometry(size.x, size.y, size.z));
+  wireframe.position.set(size.x / 2, size.y / 2, size.z / 2);
+
+  // Update labels
+  const fmtCm = (v) => v >= 100 ? `${(v / 100).toFixed(2)}m` : `${Math.round(v)}cm`;
+  const w = parseFloat(document.getElementById('dim-w').value) || 0;
+  const h = parseFloat(document.getElementById('dim-h').value) || 0;
+  const d = parseFloat(document.getElementById('dim-d').value) || 0;
+  const labelScale = Math.max(size.x, size.y, size.z) * 0.5;
+
+  wLabel.sprite.position.set(lx(box.min.x + size.x / 2), ly(-0.05), lz(box.min.z - size.z * 0.08));
+  updateDimLabel(wLabel, fmtCm(w), labelScale);
+
+  hLabel.sprite.position.set(lx(box.min.x - size.x * 0.08), ly(size.y / 2), lz(box.min.z - size.z * 0.08));
+  updateDimLabel(hLabel, fmtCm(h), labelScale);
+
+  dLabel.sprite.position.set(lx(box.min.x - size.x * 0.08), ly(-0.05), lz(box.min.z + size.z / 2));
+  updateDimLabel(dLabel, fmtCm(d), labelScale);
 }
 
 // ========== Load Sculpture ==========
@@ -520,9 +490,8 @@ async function loadSculpture(id) {
     const ext = sculptureData.model_file.split('.').pop().toLowerCase();
     await loadModel(modelUrl, ext);
 
-    // Init dimension lines
-    initDimLines();
-    updateAllDimLines();
+    // Init bounding box
+    initBoundingBox();
 
     document.getElementById('loading').classList.add('hidden');
     document.getElementById('panel').style.display = '';
@@ -678,7 +647,7 @@ function applyScale(w, h, d) {
   humanGroup.position.x = fs.x / 2 + 1.5;
   currentScale = (sx + sy + sz) / 3;
   updateInfoDisplay();
-  updateAllDimLines();
+  updateBoundingBox();
 }
 
 function updateInfoDisplay() {
@@ -800,9 +769,6 @@ window.saveRotation = async function() {
     // Exit rotate mode
     if (isRotateMode) window.toggleRotateMode();
 
-    // Update dim lines for new rotation
-    updateAllDimLines();
-
     // Recalculate bounding box with new rotation
     const box = new THREE.Box3().setFromObject(modelGroup);
     originalBox.size = box.getSize(new THREE.Vector3());
@@ -829,8 +795,8 @@ window.resetModelRotation = function() {
   // Reposition on ground
   modelGroup.position.y -= box.min.y;
 
-  // Update dim lines for new rotation
-  updateAllDimLines();
+  // Update bounding box for new rotation
+  updateBoundingBox();
 };
 </script>
 </body>
