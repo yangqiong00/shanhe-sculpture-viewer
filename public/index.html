@@ -48,6 +48,18 @@
   .gallery {
     max-width: 1200px; margin: 0 auto; padding: 40px;
   }
+  .search-bar {
+    margin-bottom: 24px;
+  }
+  .search-bar input {
+    width: 100%; max-width: 400px; padding: 10px 16px;
+    background: #1a1a1a; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; color: #e8e8e8; font-size: 14px;
+    font-family: 'Inter', sans-serif; outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-bar input:focus { border-color: #FF6A00; }
+  .search-bar input::placeholder { color: #555; }
   .gallery-header {
     display: flex; justify-content: space-between; align-items: center;
     margin-bottom: 30px;
@@ -159,6 +171,9 @@
     <h3>Our Sculptures</h3>
     <span class="gallery-count" id="gallery-count"></span>
   </div>
+  <div class="search-bar">
+    <input type="text" id="search-input" placeholder="Search sculptures..." oninput="filterSculptures()">
+  </div>
   <div class="grid" id="grid"></div>
 </section>
 
@@ -167,46 +182,64 @@
 </footer>
 
 <script>
+let allSculptures = [];
+
 async function loadSculptures() {
   try {
     const res = await fetch('/api/sculptures');
-    const sculptures = await res.json();
-    const grid = document.getElementById('grid');
-    document.getElementById('sculpture-count').textContent = sculptures.length;
-    document.getElementById('gallery-count').textContent = `${sculptures.length} piece${sculptures.length !== 1 ? 's' : ''}`;
-
-    if (sculptures.length === 0) {
-      grid.innerHTML = `
-        <div class="empty-state" style="grid-column: 1/-1;">
-          <div class="icon">🏛</div>
-          <p>No sculptures uploaded yet.</p>
-        </div>`;
-      return;
-    }
-
-    sculptures.forEach(s => {
-      const dims = `${s.default_width}×${s.default_height}×${s.default_depth} ${s.unit}`;
-      const card = document.createElement('a');
-      card.className = 'card';
-      card.href = `/viewer.html?id=${s.id}`;
-      card.innerHTML = `
-        <div class="card-thumb">
-          <div class="placeholder-3d">🗿</div>
-          <div class="view-badge">VIEW 3D</div>
-        </div>
-        <div class="card-body">
-          <h4>${escapeHtml(s.name)}</h4>
-          <p>${escapeHtml(s.description || 'Custom fiberglass sculpture')}</p>
-          <div class="card-meta">
-            <span>📐 ${dims}</span>
-            <span>🔄 360° View</span>
-          </div>
-        </div>`;
-      grid.appendChild(card);
-    });
+    allSculptures = await res.json();
+    document.getElementById('sculpture-count').textContent = allSculptures.length;
+    document.getElementById('gallery-count').textContent = `${allSculptures.length} piece${allSculptures.length !== 1 ? 's' : ''}`;
+    renderGrid(allSculptures);
   } catch (err) {
     console.error('Failed to load sculptures:', err);
   }
+}
+
+function filterSculptures() {
+  const q = document.getElementById('search-input').value.toLowerCase().trim();
+  if (!q) return renderGrid(allSculptures);
+  const filtered = allSculptures.filter(s =>
+    s.name.toLowerCase().includes(q) ||
+    (s.description || '').toLowerCase().includes(q)
+  );
+  renderGrid(filtered);
+}
+
+function renderGrid(sculptures) {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  if (sculptures.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="icon">🔍</div><p>No sculptures found.</p></div>`;
+    return;
+  }
+
+  sculptures.forEach(s => {
+    const dims = `${s.default_width}×${s.default_height}×${s.default_depth} ${s.unit}`;
+    const card = document.createElement('a');
+    card.className = 'card';
+    card.href = `/viewer.html?id=${s.id}`;
+
+    const thumbContent = s.cover_image
+      ? `<img src="/covers/${s.cover_image}" alt="${escapeHtml(s.name)}" style="width:100%;height:100%;object-fit:cover;">`
+      : `<div class="placeholder-3d">🗿</div>`;
+
+    card.innerHTML = `
+      <div class="card-thumb">
+        ${thumbContent}
+        <div class="view-badge">VIEW 3D</div>
+      </div>
+      <div class="card-body">
+        <h4>${escapeHtml(s.name)}</h4>
+        <p>${escapeHtml(s.description || 'Custom fiberglass sculpture')}</p>
+        <div class="card-meta">
+          <span>📐 ${dims}</span>
+          <span>🔄 360° View</span>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
 }
 
 function escapeHtml(str) {

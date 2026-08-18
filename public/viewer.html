@@ -8,8 +8,6 @@
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: #e8e8e8; overflow: hidden; height: 100vh; }
-
-  /* Top Bar */
   .topbar {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
     display: flex; align-items: center; justify-content: space-between;
@@ -27,14 +25,8 @@
     text-decoration: none; transition: all 0.2s;
   }
   .btn-back:hover { border-color: #FF6A00; color: #FF6A00; }
-
-  /* 3D Canvas */
-  #canvas-container {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  }
+  #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
   #canvas-container canvas { display: block; }
-
-  /* Control Panel */
   .panel {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
     z-index: 100; background: rgba(20,20,20,0.92);
@@ -43,16 +35,9 @@
     padding: 20px 28px; min-width: 360px;
     box-shadow: 0 12px 40px rgba(0,0,0,0.5);
   }
-  .panel-title {
-    font-size: 11px; font-weight: 600; color: #666; letter-spacing: 2px;
-    text-transform: uppercase; margin-bottom: 14px;
-  }
-  .dim-row {
-    display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
-  }
-  .dim-row label {
-    width: 50px; font-size: 13px; color: #888; font-weight: 500;
-  }
+  .panel-title { font-size: 11px; font-weight: 600; color: #666; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
+  .dim-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .dim-row label { width: 50px; font-size: 13px; color: #888; font-weight: 500; }
   .dim-row input {
     flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
     border-radius: 8px; padding: 8px 12px; color: #fff; font-size: 15px;
@@ -60,9 +45,7 @@
   }
   .dim-row input:focus { border-color: #FF6A00; }
   .dim-row .unit { font-size: 13px; color: #666; width: 24px; }
-  .dim-row.lock {
-    justify-content: flex-end; gap: 8px;
-  }
+  .dim-row.lock { justify-content: flex-end; gap: 8px; }
   .lock-btn {
     display: flex; align-items: center; gap: 6px;
     background: none; border: 1px solid rgba(255,255,255,0.12);
@@ -76,8 +59,6 @@
     cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif;
   }
   .reset-btn:hover { border-color: #FF6A00; color: #FF6A00; }
-
-  /* Info badge */
   .info-badge {
     position: fixed; top: 70px; right: 20px; z-index: 100;
     background: rgba(20,20,20,0.9); backdrop-filter: blur(16px);
@@ -86,15 +67,6 @@
   }
   .info-badge .label { color: #555; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
   .info-badge .value { color: #ddd; font-weight: 500; }
-  .info-badge a { color: #FF6A00; text-decoration: none; }
-
-  /* Scale indicator */
-  .scale-indicator {
-    position: fixed; bottom: 20px; right: 20px; z-index: 90;
-    font-size: 11px; color: #555;
-  }
-
-  /* Loading */
   .loading-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: #0a0a0a; display: flex; flex-direction: column;
@@ -102,15 +74,9 @@
     transition: opacity 0.5s;
   }
   .loading-overlay.hidden { opacity: 0; pointer-events: none; }
-  .spinner {
-    width: 40px; height: 40px; border: 3px solid rgba(255,106,0,0.2);
-    border-top-color: #FF6A00; border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
+  .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,106,0,0.2); border-top-color: #FF6A00; border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .loading-text { margin-top: 16px; font-size: 14px; color: #666; }
-
-  /* Hint */
   .hint {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
     z-index: 90; background: rgba(255,106,0,0.15); border: 1px solid rgba(255,106,0,0.3);
@@ -118,8 +84,6 @@
     pointer-events: none; opacity: 0; transition: opacity 0.5s;
   }
   .hint.show { opacity: 1; }
-
-  /* Mobile */
   @media (max-width: 768px) {
     .topbar { padding: 10px 16px; }
     .topbar-left .title { display: none; }
@@ -129,17 +93,11 @@
 </style>
 </head>
 <body>
-
-<!-- Loading -->
 <div class="loading-overlay" id="loading">
   <div class="spinner"></div>
   <div class="loading-text">Loading 3D Model...</div>
 </div>
-
-<!-- Interaction hint -->
-<div class="hint" id="hint">🖱 Drag to rotate · Scroll to zoom</div>
-
-<!-- Top Bar -->
+<div class="hint" id="hint">🖱 Drag to rotate · Scroll to zoom · Right-click to pan</div>
 <div class="topbar">
   <div class="topbar-left">
     <img src="/logo.jpg" alt="" onerror="this.style.display='none'">
@@ -149,54 +107,30 @@
   </div>
   <a href="/" class="btn-back">← Gallery</a>
 </div>
-
-<!-- 3D Canvas -->
 <div id="canvas-container"></div>
-
-<!-- Info Badge -->
 <div class="info-badge" id="info-badge" style="display:none;">
   <div><span class="label">Current Size</span></div>
   <div><span class="value" id="info-size">—</span></div>
   <div style="margin-top:8px;"><span class="label">Scale</span></div>
   <div><span class="value" id="info-scale">100%</span></div>
 </div>
-
-<!-- Dimension Panel -->
 <div class="panel" id="panel" style="display:none;">
   <div class="panel-title">Adjust Dimensions</div>
-  <div class="dim-row">
-    <label>Width</label>
-    <input type="number" id="dim-w" step="1" min="1">
-    <span class="unit">cm</span>
-  </div>
-  <div class="dim-row">
-    <label>Height</label>
-    <input type="number" id="dim-h" step="1" min="1">
-    <span class="unit">cm</span>
-  </div>
-  <div class="dim-row">
-    <label>Depth</label>
-    <input type="number" id="dim-d" step="1" min="1">
-    <span class="unit">cm</span>
-  </div>
+  <div class="dim-row"><label>Width</label><input type="number" id="dim-w" step="1" min="1"><span class="unit">cm</span></div>
+  <div class="dim-row"><label>Height</label><input type="number" id="dim-h" step="1" min="1"><span class="unit">cm</span></div>
+  <div class="dim-row"><label>Depth</label><input type="number" id="dim-d" step="1" min="1"><span class="unit">cm</span></div>
   <div class="dim-row lock">
     <button class="lock-btn active" id="lock-btn" onclick="toggleLock()">🔒 Proportional</button>
     <button class="reset-btn" onclick="resetDimensions()">↺ Reset</button>
   </div>
 </div>
 
-<!-- Scale indicator -->
-<div class="scale-indicator" id="scale-indicator"></div>
-
 <script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-  }
-}
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
 </script>
-
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -205,17 +139,17 @@ import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 
-// ========== State ==========
 let scene, camera, renderer, controls;
 let modelGroup = null;
 let humanGroup = null;
 let gridHelper = null;
 let originalBox = null;
+let dimLines = { width: null, height: null, depth: null };
 let defaultDims = { w: 84, h: 225, d: 80 };
 let currentScale = 1.0;
 let lockProportional = true;
+let sculptureData = null;
 
-// ========== Init ==========
 const urlParams = new URLSearchParams(window.location.search);
 const sculptureId = urlParams.get('id');
 
@@ -227,17 +161,14 @@ if (!sculptureId) {
 }
 
 function initScene() {
-  // Scene
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x111111);
-  scene.fog = new THREE.FogExp2(0x111111, 0.015);
+  scene.fog = new THREE.FogExp2(0x111111, 0.012);
 
-  // Camera
-  camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 1000);
   camera.position.set(5, 3, 5);
 
-  // Renderer
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
@@ -246,60 +177,40 @@ function initScene() {
   renderer.toneMappingExposure = 1.2;
   document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-  // Controls
+  // Controls - NO polar angle limit, full 360° including bottom
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
-  controls.maxPolarAngle = Math.PI * 0.85;
-  controls.minDistance = 1;
-  controls.maxDistance = 50;
+  controls.minDistance = 0.5;
+  controls.maxDistance = 100;
   controls.target.set(0, 1.5, 0);
 
   // Lighting
-  const ambient = new THREE.AmbientLight(0xffffff, 0.6);
-  scene.add(ambient);
-
-  const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.2);
-  dirLight1.position.set(5, 8, 5);
-  dirLight1.castShadow = true;
-  dirLight1.shadow.mapSize.set(2048, 2048);
-  dirLight1.shadow.camera.near = 0.1;
-  dirLight1.shadow.camera.far = 50;
-  dirLight1.shadow.camera.left = -10;
-  dirLight1.shadow.camera.right = 10;
-  dirLight1.shadow.camera.top = 10;
-  dirLight1.shadow.camera.bottom = -10;
-  scene.add(dirLight1);
-
-  const dirLight2 = new THREE.DirectionalLight(0x8888ff, 0.4);
-  dirLight2.position.set(-3, 4, -3);
-  scene.add(dirLight2);
-
-  const dirLight3 = new THREE.DirectionalLight(0xff8844, 0.3);
-  dirLight3.position.set(0, 2, -5);
-  scene.add(dirLight3);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  const dir1 = new THREE.DirectionalLight(0xffffff, 1.2);
+  dir1.position.set(5, 8, 5); dir1.castShadow = true;
+  dir1.shadow.mapSize.set(2048, 2048);
+  scene.add(dir1);
+  scene.add(new THREE.DirectionalLight(0x8888ff, 0.4).translateX(-3).translateY(4).translateZ(-3));
+  scene.add(new THREE.DirectionalLight(0xff8844, 0.3).translateY(2).translateZ(-5));
 
   // Ground
-  const groundGeo = new THREE.PlaneGeometry(60, 60);
-  const groundMat = new THREE.MeshStandardMaterial({
-    color: 0x1a1a1a, roughness: 0.9, metalness: 0.1
-  });
-  const ground = new THREE.Mesh(groundGeo, groundMat);
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(100, 100),
+    new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.9, metalness: 0.1 })
+  );
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
   scene.add(ground);
 
-  // Grid
   gridHelper = new THREE.GridHelper(20, 20, 0x333333, 0x222222);
   gridHelper.position.y = 0.005;
   scene.add(gridHelper);
 
-  // Human figure
   humanGroup = createHumanFigure(1.75);
   humanGroup.position.set(3, 0, 0);
   scene.add(humanGroup);
 
-  // Animate
   function animate() {
     requestAnimationFrame(animate);
     controls.update();
@@ -307,14 +218,12 @@ function initScene() {
   }
   animate();
 
-  // Resize
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
 
-  // Show hint
   setTimeout(() => {
     const hint = document.getElementById('hint');
     hint.classList.add('show');
@@ -324,83 +233,171 @@ function initScene() {
 
 // ========== Human Figure ==========
 function createHumanFigure(height) {
-  const group = new THREE.Group();
-  const mat = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.6, metalness: 0.1 });
+  const g = new THREE.Group();
+  const m = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.6, metalness: 0.1 });
   const s = height / 1.75;
 
-  // Head
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.1 * s, 16, 16), mat);
-  head.position.y = 1.62 * s;
-  head.castShadow = true;
-  group.add(head);
-
-  // Neck
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.04 * s, 0.05 * s, 0.08 * s, 8), mat);
-  neck.position.y = 1.49 * s;
-  group.add(neck);
-
-  // Torso (upper)
-  const torsoUpper = new THREE.Mesh(new THREE.CylinderGeometry(0.18 * s, 0.16 * s, 0.35 * s, 8), mat);
-  torsoUpper.position.y = 1.28 * s;
-  torsoUpper.castShadow = true;
-  group.add(torsoUpper);
-
-  // Torso (lower)
-  const torsoLower = new THREE.Mesh(new THREE.CylinderGeometry(0.16 * s, 0.14 * s, 0.25 * s, 8), mat);
-  torsoLower.position.y = 0.98 * s;
-  torsoLower.castShadow = true;
-  group.add(torsoLower);
-
-  // Arms
-  [-1, 1].forEach(side => {
-    const upperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.035 * s, 0.03 * s, 0.3 * s, 8), mat);
-    upperArm.position.set(side * 0.22 * s, 1.22 * s, 0);
-    upperArm.rotation.z = side * 0.15;
-    upperArm.castShadow = true;
-    group.add(upperArm);
-
-    const forearm = new THREE.Mesh(new THREE.CylinderGeometry(0.03 * s, 0.025 * s, 0.28 * s, 8), mat);
-    forearm.position.set(side * 0.26 * s, 0.93 * s, 0);
-    forearm.rotation.z = side * 0.08;
-    forearm.castShadow = true;
-    group.add(forearm);
+  const parts = [
+    [new THREE.SphereGeometry(0.1*s,16,16), [0, 1.62*s, 0]],
+    [new THREE.CylinderGeometry(0.04*s,0.05*s,0.08*s,8), [0, 1.49*s, 0]],
+    [new THREE.CylinderGeometry(0.18*s,0.16*s,0.35*s,8), [0, 1.28*s, 0]],
+    [new THREE.CylinderGeometry(0.16*s,0.14*s,0.25*s,8), [0, 0.98*s, 0]],
+  ];
+  parts.forEach(([geo, pos]) => {
+    const mesh = new THREE.Mesh(geo, m);
+    mesh.position.set(...pos); mesh.castShadow = true; g.add(mesh);
   });
 
-  // Legs
   [-1, 1].forEach(side => {
-    const thigh = new THREE.Mesh(new THREE.CylinderGeometry(0.06 * s, 0.05 * s, 0.42 * s, 8), mat);
-    thigh.position.set(side * 0.08 * s, 0.64 * s, 0);
-    thigh.castShadow = true;
-    group.add(thigh);
-
-    const shin = new THREE.Mesh(new THREE.CylinderGeometry(0.045 * s, 0.035 * s, 0.42 * s, 8), mat);
-    shin.position.set(side * 0.08 * s, 0.22 * s, 0);
-    shin.castShadow = true;
-    group.add(shin);
-
-    // Feet
-    const foot = new THREE.Mesh(new THREE.BoxGeometry(0.08 * s, 0.04 * s, 0.16 * s), mat);
-    foot.position.set(side * 0.08 * s, 0.02 * s, 0.03 * s);
-    group.add(foot);
+    [[0.035*s,0.03*s,0.3*s, side*0.22*s,1.22*s,0, side*0.15],
+     [0.03*s,0.025*s,0.28*s, side*0.26*s,0.93*s,0, side*0.08],
+     [0.06*s,0.05*s,0.42*s, side*0.08*s,0.64*s,0, 0],
+     [0.045*s,0.035*s,0.42*s, side*0.08*s,0.22*s,0, 0]].forEach(([rt,rb,h,x,y,z,rz]) => {
+      const mesh = new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,8), m);
+      mesh.position.set(x,y,z); mesh.rotation.z = rz||0; mesh.castShadow = true; g.add(mesh);
+    });
+    const foot = new THREE.Mesh(new THREE.BoxGeometry(0.08*s,0.04*s,0.16*s), m);
+    foot.position.set(side*0.08*s, 0.02*s, 0.03*s); g.add(foot);
   });
 
-  // Label
-  const labelCanvas = document.createElement('canvas');
-  labelCanvas.width = 256;
-  labelCanvas.height = 64;
-  const ctx = labelCanvas.getContext('2d');
-  ctx.fillStyle = '#888888';
-  ctx.font = 'bold 28px Inter, sans-serif';
-  ctx.textAlign = 'center';
+  // Height label
+  const c = document.createElement('canvas'); c.width = 256; c.height = 64;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#888888'; ctx.font = 'bold 28px Inter, sans-serif'; ctx.textAlign = 'center';
   ctx.fillText(`${height.toFixed(2)}m`, 128, 40);
-  const labelTexture = new THREE.CanvasTexture(labelCanvas);
-  const labelMat = new THREE.SpriteMaterial({ map: labelTexture, transparent: true });
-  const label = new THREE.Sprite(labelMat);
-  label.position.y = height + 0.2;
-  label.scale.set(0.8, 0.2, 1);
-  group.add(label);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true }));
+  sp.position.y = height + 0.2; sp.scale.set(0.8, 0.2, 1); g.add(sp);
+  return g;
+}
 
+// ========== Dimension Annotation Lines ==========
+function createDimLine(color = 0xff2222) {
+  const group = new THREE.Group();
+  const lineMat = new THREE.LineBasicMaterial({ color, linewidth: 2 });
+
+  // Main line
+  const lineGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)
+  ]);
+  const line = new THREE.Line(lineGeo, lineMat);
+  group.add(line);
+
+  // Endpoint ticks
+  const tickSize = 0.05;
+  const tick1Geo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, -tickSize, 0), new THREE.Vector3(0, tickSize, 0)
+  ]);
+  const tick2Geo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(1, -tickSize, 0), new THREE.Vector3(1, tickSize, 0)
+  ]);
+  group.add(new THREE.Line(tick1Geo, lineMat));
+  group.add(new THREE.Line(tick2Geo, lineMat));
+
+  // Arrowheads
+  const arrowMat = new THREE.MeshBasicMaterial({ color });
+  const arrow1 = new THREE.Mesh(new THREE.ConeGeometry(tickSize*0.8, tickSize*3, 8), arrowMat);
+  arrow1.rotation.z = Math.PI / 2; arrow1.position.set(tickSize*1.5, 0, 0);
+  group.add(arrow1);
+  const arrow2 = new THREE.Mesh(new THREE.ConeGeometry(tickSize*0.8, tickSize*3, 8), arrowMat);
+  arrow2.rotation.z = -Math.PI / 2; arrow2.position.set(1 - tickSize*1.5, 0, 0);
+  group.add(arrow2);
+
+  // Text label sprite
+  const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+  const texture = new THREE.CanvasTexture(canvas);
+  const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+  const sprite = new THREE.Sprite(spriteMat);
+  sprite.scale.set(1, 0.25, 1);
+  sprite.position.y = 0.12;
+  group.add(sprite);
+
+  group.userData = { line, lineGeo, tick1Geo, tick2Geo, arrow1, arrow2, sprite, canvas, ctx, texture };
   return group;
+}
+
+function updateDimLine(dimGroup, length, label, axis) {
+  const d = dimGroup.userData;
+  const len = Math.max(length, 0.01);
+
+  // Update line geometry
+  d.lineGeo.setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(len, 0, 0)]);
+  d.tick1Geo.setFromPoints([new THREE.Vector3(0, -0.05*len, 0), new THREE.Vector3(0, 0.05*len, 0)]);
+  d.tick2Geo.setFromPoints([new THREE.Vector3(len, -0.05*len, 0), new THREE.Vector3(len, 0.05*len, 0)]);
+
+  const tk = 0.03 * len;
+  d.arrow1.scale.set(tk, tk, tk);
+  d.arrow1.position.set(tk * 1.5, 0, 0);
+  d.arrow2.scale.set(tk, tk, tk);
+  d.arrow2.position.set(len - tk * 1.5, 0, 0);
+
+  // Update label
+  const { ctx: c, canvas: cv, texture: tex } = d;
+  c.clearRect(0, 0, 512, 128);
+  c.fillStyle = '#ff2222';
+  c.font = 'bold 48px Inter, sans-serif';
+  c.textAlign = 'center';
+  c.fillText(label, 256, 72);
+  tex.needsUpdate = true;
+
+  d.sprite.position.set(len / 2, len * 0.08, 0);
+  const labelScale = Math.max(len * 0.4, 0.3);
+  d.sprite.scale.set(labelScale, labelScale * 0.25, 1);
+}
+
+function initDimLines() {
+  // Remove old
+  Object.values(dimLines).forEach(g => { if (g) scene.remove(g); });
+
+  dimLines.width = createDimLine(0xff2222);
+  dimLines.height = createDimLine(0xff2222);
+  dimLines.depth = createDimLine(0xff2222);
+
+  // Height line is vertical - rotate it
+  dimLines.height.rotation.z = Math.PI / 2;
+
+  scene.add(dimLines.width);
+  scene.add(dimLines.height);
+  scene.add(dimLines.depth);
+}
+
+function repositionDimLines() {
+  if (!modelGroup) return;
+
+  const box = new THREE.Box3().setFromObject(modelGroup);
+  const size = new THREE.Vector3();
+  box.getSize(size);
+  const min = box.min;
+  const offset = size.y * 0.08;
+
+  // Width (X axis) - along the front bottom
+  dimLines.width.position.set(min.x, 0, min.z - offset);
+
+  // Height (Y axis) - along the left side
+  dimLines.height.position.set(min.x - offset, 0, min.z - offset);
+
+  // Depth (Z axis) - along the bottom left
+  dimLines.depth.rotation.y = Math.PI / 2;
+  dimLines.depth.position.set(min.x - offset, 0, min.z);
+}
+
+function updateAllDimLines() {
+  const w = parseFloat(document.getElementById('dim-w').value) || 0;
+  const h = parseFloat(document.getElementById('dim-h').value) || 0;
+  const d = parseFloat(document.getElementById('dim-d').value) || 0;
+
+  // Convert cm to meters for display
+  const wM = w / 100;
+  const hM = h / 100;
+  const dM = d / 100;
+
+  // Format labels
+  const fmtCm = (v) => v >= 100 ? `${(v/100).toFixed(2)}m` : `${Math.round(v)}cm`;
+  updateDimLine(dimLines.width, wM, fmtCm(w), 'x');
+  updateDimLine(dimLines.height, hM, fmtCm(h), 'y');
+  updateDimLine(dimLines.depth, dM, fmtCm(d), 'z');
+
+  repositionDimLines();
 }
 
 // ========== Load Sculpture ==========
@@ -408,128 +405,122 @@ async function loadSculpture(id) {
   try {
     const res = await fetch(`/api/sculptures/${id}`);
     if (!res.ok) throw new Error('Sculpture not found');
-    const sculpture = await res.json();
+    sculptureData = await res.json();
 
-    document.getElementById('sculpture-name').textContent = sculpture.name;
-    document.title = `SHANHE CRAFT | ${sculpture.name}`;
+    document.getElementById('sculpture-name').textContent = sculptureData.name;
+    document.title = `SHANHE CRAFT | ${sculptureData.name}`;
     defaultDims = {
-      w: sculpture.default_width || 84,
-      h: sculpture.default_height || 225,
-      d: sculpture.default_depth || 80
+      w: sculptureData.default_width || 84,
+      h: sculptureData.default_height || 225,
+      d: sculptureData.default_depth || 80
     };
 
-    // Set initial dimension values
     document.getElementById('dim-w').value = defaultDims.w;
     document.getElementById('dim-h').value = defaultDims.h;
     document.getElementById('dim-d').value = defaultDims.d;
 
-    // Load 3D model
-    const modelUrl = `/models/${sculpture.model_file}`;
-    const ext = sculpture.model_file.split('.').pop().toLowerCase();
+    const modelUrl = `/models/${sculptureData.model_file}`;
+    const ext = sculptureData.model_file.split('.').pop().toLowerCase();
     await loadModel(modelUrl, ext);
 
-    // Show panels
+    // Init dimension lines
+    initDimLines();
+    updateAllDimLines();
+
     document.getElementById('loading').classList.add('hidden');
     document.getElementById('panel').style.display = '';
     document.getElementById('info-badge').style.display = '';
 
-    // Bind dimension inputs
     ['dim-w', 'dim-h', 'dim-d'].forEach(id => {
       document.getElementById(id).addEventListener('input', onDimensionChange);
     });
-
   } catch (err) {
-    console.error('Load error:', err);
     document.getElementById('loading').innerHTML =
       `<p style="color:#ff4444">Error: ${err.message}</p><p style="color:#888;margin-top:8px"><a href="/" style="color:#FF6A00">Back to gallery</a></p>`;
   }
 }
 
 async function loadModel(url, ext) {
-  let object;
   const loadingManager = new THREE.LoadingManager();
+  const modelColor = sculptureData?.model_color || '#f0f0f0';
+  const rotX = (sculptureData?.rotation_x || 0) * Math.PI / 180;
+  const rotY = (sculptureData?.rotation_y || 0) * Math.PI / 180;
+  const rotZ = (sculptureData?.rotation_z || 0) * Math.PI / 180;
 
   return new Promise((resolve, reject) => {
     const onLoad = (obj) => {
-      object = obj;
-
-      // Remove old model
       if (modelGroup) scene.remove(modelGroup);
       modelGroup = new THREE.Group();
 
-      // Apply material if OBJ/STL (they don't have materials)
+      // Apply saved rotation
+      obj.rotation.set(rotX, rotY, rotZ);
+
+      // Apply material color
+      const color = new THREE.Color(modelColor);
       if (ext === 'obj' || ext === 'stl') {
-        object.traverse(child => {
+        obj.traverse(child => {
           if (child.isMesh) {
-            child.material = new THREE.MeshStandardMaterial({
-              color: 0xf0f0f0,
-              roughness: 0.4,
-              metalness: 0.05
-            });
-            child.castShadow = true;
-            child.receiveShadow = true;
+            child.material = new THREE.MeshStandardMaterial({ color, roughness: 0.4, metalness: 0.05 });
+            child.castShadow = true; child.receiveShadow = true;
           }
         });
       }
-
-      // For FBX, ensure materials render correctly
       if (ext === 'fbx') {
-        object.traverse(child => {
+        obj.traverse(child => {
           if (child.isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-            if (child.material) {
-              child.material.side = THREE.DoubleSide;
+            child.castShadow = true; child.receiveShadow = true;
+            if (child.material) { child.material.color = color; child.material.side = THREE.DoubleSide; }
+          }
+        });
+      }
+      if (ext === 'glb' || ext === 'gltf') {
+        obj.traverse(child => {
+          if (child.isMesh) {
+            child.castShadow = true; child.receiveShadow = true;
+            // For GLB with existing materials, tint them
+            if (child.material && child.material.color) {
+              child.material.color.lerp(color, 0.5);
             }
           }
         });
       }
 
-      modelGroup.add(object);
+      modelGroup.add(obj);
 
-      // Compute bounding box
+      // Compute bounding box AFTER rotation
       const box = new THREE.Box3().setFromObject(modelGroup);
       const size = new THREE.Vector3();
       box.getSize(size);
-      const center = new THREE.Vector3();
-      box.getCenter(center);
+      originalBox = { size: size.clone() };
 
-      originalBox = { size: size.clone(), center: center.clone() };
-
-      // Calculate scale to match default dimensions (in meters)
-      // The model's bounding box maps to the real-world dimensions
       const scaleX = (defaultDims.w / 100) / size.x;
       const scaleY = (defaultDims.h / 100) / size.y;
       const scaleZ = (defaultDims.d / 100) / size.z;
-      // Use average scale for proportional scaling
       const avgScale = (scaleX + scaleY + scaleZ) / 3;
-
       modelGroup.scale.set(avgScale, avgScale, avgScale);
       currentScale = avgScale;
 
-      // Re-center on ground
+      // Center on ground
       const scaledBox = new THREE.Box3().setFromObject(modelGroup);
-      const scaledCenter = new THREE.Vector3();
-      scaledBox.getCenter(scaledCenter);
-      modelGroup.position.x -= scaledCenter.x;
-      modelGroup.position.z -= scaledCenter.z;
+      const sc = new THREE.Vector3(); scaledBox.getCenter(sc);
+      modelGroup.position.x -= sc.x;
+      modelGroup.position.z -= sc.z;
       modelGroup.position.y -= scaledBox.min.y;
 
-      // Position human figure relative to model
+      // Position human
       const finalBox = new THREE.Box3().setFromObject(modelGroup);
-      const finalSize = new THREE.Vector3();
-      finalBox.getSize(finalSize);
+      const finalSize = new THREE.Vector3(); finalBox.getSize(finalSize);
       humanGroup.position.x = finalSize.x / 2 + 1.5;
       humanGroup.position.z = 0;
 
-      // Adjust camera
+      // Camera
       const maxDim = Math.max(finalSize.x, finalSize.y, finalSize.z);
       const camDist = maxDim * 2.5;
       camera.position.set(camDist * 0.7, maxDim * 0.6, camDist * 0.7);
       controls.target.set(0, finalSize.y * 0.4, 0);
       controls.update();
 
-      // Adjust grid
+      // Grid
       const gridSize = Math.ceil(maxDim * 4);
       scene.remove(gridHelper);
       gridHelper = new THREE.GridHelper(gridSize, Math.min(gridSize * 2, 40), 0x333333, 0x222222);
@@ -543,58 +534,37 @@ async function loadModel(url, ext) {
 
     const onError = (err) => reject(err);
 
-    if (ext === 'obj') {
-      new OBJLoader(loadingManager).load(url, onLoad, undefined, onError);
-    } else if (ext === 'fbx') {
-      new FBXLoader(loadingManager).load(url, onLoad, undefined, onError);
-    } else if (ext === 'glb' || ext === 'gltf') {
-      new GLTFLoader(loadingManager).load(url, (gltf) => onLoad(gltf.scene), undefined, onError);
-    } else if (ext === 'stl') {
-      new STLLoader(loadingManager).load(url, (geometry) => {
-        const mesh = new THREE.Mesh(geometry);
-        onLoad(mesh);
-      }, undefined, onError);
-    } else {
-      reject(new Error(`Unsupported format: .${ext}`));
-    }
+    if (ext === 'obj') new OBJLoader(loadingManager).load(url, onLoad, undefined, onError);
+    else if (ext === 'fbx') new FBXLoader(loadingManager).load(url, onLoad, undefined, onError);
+    else if (ext === 'glb' || ext === 'gltf') new GLTFLoader(loadingManager).load(url, g => onLoad(g.scene), undefined, onError);
+    else if (ext === 'stl') new STLLoader(loadingManager).load(url, geo => onLoad(new THREE.Mesh(geo)), undefined, onError);
+    else reject(new Error(`Unsupported: .${ext}`));
   });
 }
 
 // ========== Dimension Controls ==========
 function onDimensionChange(e) {
   if (!modelGroup || !originalBox) return;
-
   const wVal = parseFloat(document.getElementById('dim-w').value) || defaultDims.w;
   const hVal = parseFloat(document.getElementById('dim-h').value) || defaultDims.h;
   const dVal = parseFloat(document.getElementById('dim-d').value) || defaultDims.d;
 
   if (lockProportional) {
-    // Find which input changed and scale proportionally
-    let newH = hVal;
-    let newW = wVal;
-    let newD = dVal;
-
+    let nW = wVal, nH = hVal, nD = dVal;
     if (e.target.id === 'dim-h') {
-      const ratio = hVal / defaultDims.h;
-      newW = Math.round(defaultDims.w * ratio);
-      newD = Math.round(defaultDims.d * ratio);
-      document.getElementById('dim-w').value = newW;
-      document.getElementById('dim-d').value = newD;
+      const r = hVal / defaultDims.h;
+      nW = Math.round(defaultDims.w * r); nD = Math.round(defaultDims.d * r);
+      document.getElementById('dim-w').value = nW; document.getElementById('dim-d').value = nD;
     } else if (e.target.id === 'dim-w') {
-      const ratio = wVal / defaultDims.w;
-      newH = Math.round(defaultDims.h * ratio);
-      newD = Math.round(defaultDims.d * ratio);
-      document.getElementById('dim-h').value = newH;
-      document.getElementById('dim-d').value = newD;
+      const r = wVal / defaultDims.w;
+      nH = Math.round(defaultDims.h * r); nD = Math.round(defaultDims.d * r);
+      document.getElementById('dim-h').value = nH; document.getElementById('dim-d').value = nD;
     } else if (e.target.id === 'dim-d') {
-      const ratio = dVal / defaultDims.d;
-      newW = Math.round(defaultDims.w * ratio);
-      newH = Math.round(defaultDims.h * ratio);
-      document.getElementById('dim-w').value = newW;
-      document.getElementById('dim-h').value = newH;
+      const r = dVal / defaultDims.d;
+      nW = Math.round(defaultDims.w * r); nH = Math.round(defaultDims.h * r);
+      document.getElementById('dim-w').value = nW; document.getElementById('dim-h').value = nH;
     }
-
-    applyScale(newW, newH, newD);
+    applyScale(nW, nH, nD);
   } else {
     applyScale(wVal, hVal, dVal);
   }
@@ -602,25 +572,16 @@ function onDimensionChange(e) {
 
 function applyScale(w, h, d) {
   if (!modelGroup || !originalBox) return;
-
   const size = originalBox.size;
-  const sx = (w / 100) / size.x;
-  const sy = (h / 100) / size.y;
-  const sz = (d / 100) / size.z;
-
+  const sx = (w / 100) / size.x, sy = (h / 100) / size.y, sz = (d / 100) / size.z;
   modelGroup.scale.set(sx, sy, sz);
-
-  // Re-center on ground
   const box = new THREE.Box3().setFromObject(modelGroup);
   modelGroup.position.y -= box.min.y;
-
-  // Reposition human
-  const finalSize = new THREE.Vector3();
-  box.getSize(finalSize);
-  humanGroup.position.x = finalSize.x / 2 + 1.5;
-
+  const fs = new THREE.Vector3(); box.getSize(fs);
+  humanGroup.position.x = fs.x / 2 + 1.5;
   currentScale = (sx + sy + sz) / 3;
   updateInfoDisplay();
+  updateAllDimLines();
 }
 
 function updateInfoDisplay() {
@@ -628,14 +589,11 @@ function updateInfoDisplay() {
   const h = parseFloat(document.getElementById('dim-h').value);
   const d = parseFloat(document.getElementById('dim-d').value);
   document.getElementById('info-size').textContent = `${w} × ${h} × ${d} cm`;
-
-  const baseScale = (defaultDims.w + defaultDims.h + defaultDims.d) / 3;
-  const curScale = (w + h + d) / 3;
-  const pct = Math.round((curScale / baseScale) * 100);
-  document.getElementById('info-scale').textContent = `${pct}%`;
+  const base = (defaultDims.w + defaultDims.h + defaultDims.d) / 3;
+  const cur = (w + h + d) / 3;
+  document.getElementById('info-scale').textContent = `${Math.round((cur / base) * 100)}%`;
 }
 
-// ========== Global Functions ==========
 window.toggleLock = function() {
   lockProportional = !lockProportional;
   const btn = document.getElementById('lock-btn');
@@ -648,15 +606,11 @@ window.resetDimensions = function() {
   document.getElementById('dim-h').value = defaultDims.h;
   document.getElementById('dim-d').value = defaultDims.d;
   applyScale(defaultDims.w, defaultDims.h, defaultDims.d);
-
-  // Reset camera
   if (modelGroup) {
     const box = new THREE.Box3().setFromObject(modelGroup);
-    const size = new THREE.Vector3();
-    box.getSize(size);
-    const maxDim = Math.max(size.x, size.y, size.z);
-    const camDist = maxDim * 2.5;
-    camera.position.set(camDist * 0.7, maxDim * 0.6, camDist * 0.7);
+    const size = new THREE.Vector3(); box.getSize(size);
+    const cd = Math.max(size.x, size.y, size.z) * 2.5;
+    camera.position.set(cd * 0.7, size.y * 0.6, cd * 0.7);
     controls.target.set(0, size.y * 0.4, 0);
     controls.update();
   }

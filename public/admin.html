@@ -172,7 +172,6 @@
 // ========== State ==========
 let isAuthenticated = false;
 let sculptures = [];
-let uploadedFile = null;
 
 // ========== Init ==========
 (async function init() {
@@ -267,9 +266,13 @@ function renderSculptureList() {
     return;
   }
 
-  list.innerHTML = sculptures.map(s => `
+  list.innerHTML = sculptures.map(s => {
+    const iconHtml = s.cover_image
+      ? `<div class="sculpture-icon" style="background:url('/covers/${s.cover_image}') center/cover;border-radius:8px;"></div>`
+      : `<div class="sculpture-icon">🗿</div>`;
+    return `
     <div class="sculpture-item">
-      <div class="sculpture-icon">🗿</div>
+      ${iconHtml}
       <div class="sculpture-info">
         <h4>${escHtml(s.name)}</h4>
         <p>${escHtml(s.description || 'No description')}</p>
@@ -279,13 +282,19 @@ function renderSculptureList() {
         <a class="btn-view" href="/viewer.html?id=${s.id}" target="_blank">View 3D</a>
         <button class="btn-delete" onclick="deleteSculpture(${s.id}, '${escHtml(s.name)}')">Delete</button>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 // ========== Add Sculpture Modal ==========
+let uploadedFile = null;
+let uploadedCover = null;
+let extractedColor = '#f0f0f0';
+
 function showAddModal() {
   uploadedFile = null;
+  uploadedCover = null;
+  extractedColor = '#f0f0f0';
   document.getElementById('modal-overlay').classList.add('show');
   document.getElementById('modal-content').innerHTML = `
     <h3>Add New Sculpture</h3>
@@ -325,23 +334,108 @@ function showAddModal() {
       </div>
       <div class="upload-progress" id="upload-progress"><div class="bar" id="upload-bar"></div></div>
     </div>
+    <div class="form-group">
+      <label>Cover Photo (optional - shows as thumbnail & extracts color for 3D model)</label>
+      <div class="file-drop" id="cover-drop" onclick="document.getElementById('cover-input').click()" style="padding:16px;">
+        <div class="icon">🖼</div>
+        <p>Upload finished product photo</p>
+        <p style="font-size:11px;color:#bbb;margin-top:4px;">JPG, PNG, WebP</p>
+        <div class="filename" id="cover-name"></div>
+        <input type="file" id="cover-input" accept=".jpg,.jpeg,.png,.webp" onchange="onCoverSelect(this)">
+      </div>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;color:#888;">Extracted color:</span>
+        <div id="color-preview" style="width:24px;height:24px;border-radius:4px;background:#f0f0f0;border:1px solid #ddd;"></div>
+        <input type="color" id="f-color" value="#f0f0f0" style="width:32px;height:24px;border:none;cursor:pointer;" onchange="extractedColor=this.value;document.getElementById('color-preview').style.background=this.value;">
+        <span style="font-size:11px;color:#aaa;">(click to override)</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Model Rotation (adjust if model is sideways/upside down)</label>
+      <div class="form-row">
+        <div class="form-group">
+          <input type="range" id="f-rotx" min="0" max="360" value="0" oninput="document.getElementById('rotx-val').textContent=this.value+'°'" style="width:100%;">
+          <div class="hint">X-axis: <span id="rotx-val">0°</span></div>
+        </div>
+        <div class="form-group">
+          <input type="range" id="f-roty" min="0" max="360" value="0" oninput="document.getElementById('roty-val').textContent=this.value+'°'" style="width:100%;">
+          <div class="hint">Y-axis: <span id="roty-val">0°</span></div>
+        </div>
+        <div class="form-group">
+          <input type="range" id="f-rotz" min="0" max="360" value="0" oninput="document.getElementById('rotz-val').textContent=this.value+'°'" style="width:100%;">
+          <div class="hint">Z-axis: <span id="rotz-val">0°</span></div>
+        </div>
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal()">Cancel</button>
       <button class="btn-save" id="btn-save" onclick="saveSculpture()" disabled>Add Sculpture</button>
     </div>`;
 
-  // Drag & drop
+  // Drag & drop for model
   const dropZone = document.getElementById('file-drop');
   dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
   dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
   dropZone.addEventListener('drop', e => {
-    e.preventDefault();
-    dropZone.classList.remove('dragover');
+    e.preventDefault(); dropZone.classList.remove('dragover');
     if (e.dataTransfer.files.length > 0) {
       document.getElementById('file-input').files = e.dataTransfer.files;
       onFileSelect(document.getElementById('file-input'));
     }
   });
+
+  // Drag & drop for cover
+  const coverDrop = document.getElementById('cover-drop');
+  coverDrop.addEventListener('dragover', e => { e.preventDefault(); coverDrop.classList.add('dragover'); });
+  coverDrop.addEventListener('dragleave', () => coverDrop.classList.remove('dragover'));
+  coverDrop.addEventListener('drop', e => {
+    e.preventDefault(); coverDrop.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) {
+      document.getElementById('cover-input').files = e.dataTransfer.files;
+      onCoverSelect(document.getElementById('cover-input'));
+    }
+  });
+}
+
+function onCoverSelect(input) {
+  if (input.files.length > 0) {
+    const file = input.files[0];
+    uploadedCover = file;
+    document.getElementById('cover-name').textContent = `✓ ${file.name}`;
+    // Extract dominant color
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 50; canvas.height = 50;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, 50, 50);
+        const data = ctx.getImageData(0, 0, 50, 50).data;
+        let r = 0, g = 0, b = 0, count = 0;
+        for (let i = 0; i < data.length; i += 16) {
+          // Skip very dark and very light pixels
+          const pr = data[i], pg = data[i+1], pb = data[i+2];
+          const brightness = (pr + pg + pb) / 3;
+          if (brightness > 30 && brightness < 240) {
+            r += pr; g += pg; b += pb; count++;
+          }
+        }
+        if (count > 0) {
+          r = Math.round(r / count);
+          g = Math.round(g / count);
+          b = Math.round(b / count);
+        } else {
+          r = 200; g = 200; b = 200;
+        }
+        extractedColor = `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+        document.getElementById('color-preview').style.background = extractedColor;
+        document.getElementById('f-color').value = extractedColor;
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
 }
 
 function onFileSelect(input) {
@@ -369,6 +463,10 @@ async function saveSculpture() {
   const width = parseFloat(document.getElementById('f-width').value) || 84;
   const height = parseFloat(document.getElementById('f-height').value) || 225;
   const depth = parseFloat(document.getElementById('f-depth').value) || 80;
+  const rotX = parseFloat(document.getElementById('f-rotx')?.value) || 0;
+  const rotY = parseFloat(document.getElementById('f-roty')?.value) || 0;
+  const rotZ = parseFloat(document.getElementById('f-rotz')?.value) || 0;
+  const color = document.getElementById('f-color')?.value || '#f0f0f0';
 
   if (!name) return showToast('Please enter a name', 'error');
   if (!uploadedFile) return showToast('Please select a 3D model file', 'error');
@@ -377,15 +475,15 @@ async function saveSculpture() {
   btn.disabled = true;
   btn.textContent = 'Uploading...';
 
-  // Show progress
   const progressDiv = document.getElementById('upload-progress');
   const progressBar = document.getElementById('upload-bar');
   progressDiv.style.display = 'block';
 
   try {
-    // Upload file
+    // Upload model and cover together
     const formData = new FormData();
     formData.append('model', uploadedFile);
+    if (uploadedCover) formData.append('cover', uploadedCover);
 
     const uploadRes = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
@@ -403,14 +501,17 @@ async function saveSculpture() {
       xhr.send(formData);
     });
 
-    // Create sculpture entry
+    // Create sculpture entry with all fields
     const createRes = await fetch('/api/sculptures', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name, description: desc,
-        model_file: uploadRes.filename,
-        default_width: width, default_height: height, default_depth: depth
+        model_file: uploadRes.model.filename,
+        default_width: width, default_height: height, default_depth: depth,
+        cover_image: uploadRes.cover?.filename || '',
+        rotation_x: rotX, rotation_y: rotY, rotation_z: rotZ,
+        model_color: color
       })
     });
 
