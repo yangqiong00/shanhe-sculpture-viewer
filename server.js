@@ -176,6 +176,12 @@ app.post('/api/upload', authRequired, uploadFields, (req, res) => {
   res.json(result);
 });
 
+// Upload cover only (for editing existing sculptures)
+app.post('/api/upload-cover', authRequired, upload.single('cover'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No cover file' });
+  res.json({ filename: req.file.filename });
+});
+
 // Create sculpture
 app.post('/api/sculptures', authRequired, (req, res) => {
   const { name, description, model_file, default_width, default_height, default_depth, unit,
@@ -196,12 +202,18 @@ app.post('/api/sculptures', authRequired, (req, res) => {
 // Update sculpture
 app.put('/api/sculptures/:id', authRequired, (req, res) => {
   const { name, description, default_width, default_height, default_depth, unit,
-          cover_image, rotation_x, rotation_y, rotation_z, model_color } = req.body;
+          rotation_x, rotation_y, rotation_z, model_color } = req.body;
+  // Preserve existing cover_image if not explicitly provided in body
+  let coverValue = req.body.cover_image;
+  if (coverValue === undefined) {
+    const existing = db.prepare('SELECT cover_image FROM sculptures WHERE id = ?').get(req.params.id);
+    coverValue = existing?.cover_image || '';
+  }
   db.prepare(
     `UPDATE sculptures SET name=?, description=?, default_width=?, default_height=?, default_depth=?, unit=?,
      cover_image=?, rotation_x=?, rotation_y=?, rotation_z=?, model_color=? WHERE id=?`
   ).run(name, description || '', default_width, default_height, default_depth, unit || 'cm',
-        cover_image || '', rotation_x || 0, rotation_y || 0, rotation_z || 0, model_color || '#f0f0f0', req.params.id);
+        coverValue, rotation_x || 0, rotation_y || 0, rotation_z || 0, model_color || '#f0f0f0', req.params.id);
   const sculpture = db.prepare('SELECT * FROM sculptures WHERE id = ?').get(req.params.id);
   res.json(sculpture);
 });

@@ -89,6 +89,12 @@
     padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer;
     font-family: inherit; transition: all 0.2s;
   }
+  .btn-edit {
+    background: none; border: 1px solid #ddd; color: #666;
+    padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer;
+    font-family: inherit; transition: all 0.2s;
+  }
+  .btn-edit:hover { border-color: #FF6A00; color: #FF6A00; }
   .btn-delete:hover { border-color: #ff4444; color: #ff4444; }
 
   .empty { text-align: center; padding: 60px; color: #aaa; }
@@ -159,7 +165,7 @@
     .header { padding: 12px 16px; }
     .sculpture-item { flex-direction: column; align-items: flex-start; }
     .sculpture-actions { width: 100%; }
-    .sculpture-actions .btn-view, .sculpture-actions .btn-delete { flex: 1; text-align: center; }
+    .sculpture-actions .btn-view, .sculpture-actions .btn-edit, .sculpture-actions .btn-delete { flex: 1; text-align: center; }
   }
 </style>
 </head>
@@ -280,6 +286,7 @@ function renderSculptureList() {
       </div>
       <div class="sculpture-actions">
         <a class="btn-view" href="/viewer.html?id=${s.id}" target="_blank">View 3D</a>
+        <button class="btn-edit" onclick="showEditModal(${s.id})">Edit</button>
         <button class="btn-delete" onclick="deleteSculpture(${s.id}, '${escHtml(s.name)}')">Delete</button>
       </div>
     </div>`;
@@ -539,6 +546,153 @@ async function deleteSculpture(id, name) {
     renderSculptureList();
   } catch {
     showToast('Delete failed', 'error');
+  }
+}
+
+// ========== Edit Sculpture ==========
+let editCoverFile = null;
+
+function showEditModal(id) {
+  const s = sculptures.find(x => x.id === id);
+  if (!s) return;
+  editCoverFile = null;
+
+  document.getElementById('modal-overlay').classList.add('show');
+  document.getElementById('modal-content').innerHTML = `
+    <h3>Edit Sculpture</h3>
+    <div class="form-group">
+      <label>Sculpture Name</label>
+      <input type="text" id="e-name" value="${escHtml(s.name)}">
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="e-desc">${escHtml(s.description || '')}</textarea>
+    </div>
+    <div class="form-group">
+      <label>Default Dimensions (cm)</label>
+      <div class="form-row">
+        <div class="form-group">
+          <input type="number" id="e-width" value="${s.default_width}">
+          <div class="hint">Width</div>
+        </div>
+        <div class="form-group">
+          <input type="number" id="e-height" value="${s.default_height}">
+          <div class="hint">Height</div>
+        </div>
+        <div class="form-group">
+          <input type="number" id="e-depth" value="${s.default_depth}">
+          <div class="hint">Depth</div>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Model Rotation (adjust if model is sideways/upside down)</label>
+      <div class="form-row">
+        <div class="form-group">
+          <input type="range" id="e-rotx" min="0" max="360" value="${s.rotation_x || 0}" oninput="document.getElementById('e-rotx-val').textContent=this.value+'°'" style="width:100%;">
+          <div class="hint">X-axis: <span id="e-rotx-val">${s.rotation_x || 0}°</span></div>
+        </div>
+        <div class="form-group">
+          <input type="range" id="e-roty" min="0" max="360" value="${s.rotation_y || 0}" oninput="document.getElementById('e-roty-val').textContent=this.value+'°'" style="width:100%;">
+          <div class="hint">Y-axis: <span id="e-roty-val">${s.rotation_y || 0}°</span></div>
+        </div>
+        <div class="form-group">
+          <input type="range" id="e-rotz" min="0" max="360" value="${s.rotation_z || 0}" oninput="document.getElementById('e-rotz-val').textContent=this.value+'°'" style="width:100%;">
+          <div class="hint">Z-axis: <span id="e-rotz-val">${s.rotation_z || 0}°</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Model Color</label>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="color" id="e-color" value="${s.model_color || '#f0f0f0'}" style="width:48px;height:32px;border:none;cursor:pointer;">
+        <span style="font-size:12px;color:#888;">Click to change color applied to 3D model</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Cover Photo ${s.cover_image ? '(current shown below, upload new to replace)' : '(optional)'}</label>
+      ${s.cover_image ? `<div style="margin-bottom:8px;"><img src="/covers/${s.cover_image}" style="max-width:100%;max-height:120px;border-radius:8px;"></div>` : ''}
+      <div class="file-drop" id="edit-cover-drop" onclick="document.getElementById('edit-cover-input').click()" style="padding:16px;">
+        <div class="icon">🖼</div>
+        <p>Upload new cover photo (optional)</p>
+        <div class="filename" id="edit-cover-name"></div>
+        <input type="file" id="edit-cover-input" accept=".jpg,.jpeg,.png,.webp" onchange="onEditCoverSelect(this)">
+      </div>
+    </div>
+    <div style="background:#f8f8f8;border-radius:8px;padding:12px;margin-bottom:16px;">
+      <div style="font-size:12px;color:#888;">Model file: <strong style="color:#555;">${escHtml(s.model_file)}</strong></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" id="btn-edit-save" onclick="saveEdit(${s.id})">Save Changes</button>
+    </div>`;
+
+  // Drag & drop for edit cover
+  const coverDrop = document.getElementById('edit-cover-drop');
+  coverDrop.addEventListener('dragover', e => { e.preventDefault(); coverDrop.classList.add('dragover'); });
+  coverDrop.addEventListener('dragleave', () => coverDrop.classList.remove('dragover'));
+  coverDrop.addEventListener('drop', e => {
+    e.preventDefault(); coverDrop.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) {
+      document.getElementById('edit-cover-input').files = e.dataTransfer.files;
+      onEditCoverSelect(document.getElementById('edit-cover-input'));
+    }
+  });
+}
+
+function onEditCoverSelect(input) {
+  if (input.files.length > 0) {
+    editCoverFile = input.files[0];
+    document.getElementById('edit-cover-name').textContent = `✓ ${editCoverFile.name}`;
+  }
+}
+
+async function saveEdit(id) {
+  const btn = document.getElementById('btn-edit-save');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  try {
+    let coverImage = undefined;
+
+    // Upload new cover if selected
+    if (editCoverFile) {
+      const formData = new FormData();
+      formData.append('cover', editCoverFile);
+      const uploadRes = await fetch('/api/upload-cover', { method: 'POST', body: formData }).then(r => r.json());
+      if (uploadRes.filename) coverImage = uploadRes.filename;
+    }
+
+    const body = {
+      name: document.getElementById('e-name').value.trim(),
+      description: document.getElementById('e-desc').value.trim(),
+      default_width: parseFloat(document.getElementById('e-width').value) || 84,
+      default_height: parseFloat(document.getElementById('e-height').value) || 225,
+      default_depth: parseFloat(document.getElementById('e-depth').value) || 80,
+      rotation_x: parseFloat(document.getElementById('e-rotx').value) || 0,
+      rotation_y: parseFloat(document.getElementById('e-roty').value) || 0,
+      rotation_z: parseFloat(document.getElementById('e-rotz').value) || 0,
+      model_color: document.getElementById('e-color').value || '#f0f0f0'
+    };
+
+    if (coverImage !== undefined) body.cover_image = coverImage;
+
+    const res = await fetch(`/api/sculptures/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) throw new Error((await res.json()).error);
+
+    showToast('Sculpture updated!', 'success');
+    closeModal();
+    await loadSculptures();
+    renderSculptureList();
+  } catch (err) {
+    showToast(err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
   }
 }
 
